@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Reportes - Hotel</title>
+  <!-- <link rel="stylesheet" href="estilos.css"> -->
+</head>
+<body>
+  <header>
+    <h1>Generación de Reportes</h1>
+    <nav>
+        <a href="recepcionista_dashboard.php">Volver al Panel Principal</a>
+    </nav>
+  </header>
+  <hr>
+
+  <main>
+    <h2>Seleccione un Tipo de Reporte y Periodicidad</h2>
+    <form action="generar_reporte.php" method="GET" target="_blank"> {/* Abrir en nueva pestaña */}
+        <label for="tipo_reporte">Tipo de Reporte:</label><br>
+        <select name="tipo_reporte" id="tipo_reporte" required>
+            <option value="ingresos_totales">Ingresos Totales (Reservas + Ventas)</option>
+            <option value="ocupacion_hotel">Ocupación del Hotel (Noches vendidas)</option>
+            <option value="reservas_resumen">Resumen de Reservas (Cantidad, Promedio Estancia)</option>
+            <option value="ventas_productos_resumen">Resumen de Venta de Productos (Cantidad, Monto)</option>
+            <option value="stock_productos_critico">Productos con Stock Crítico</option>
+        </select><br><br>
+
+        <label for="periodicidad">Periodicidad:</label><br>
+        <select name="periodicidad" id="periodicidad" required>
+            <option value="diario">Diario</option>
+            <option value="semanal">Semanal</option>
+            <option value="mensual">Mensual</option>
+            <option value="anual">Anual</option>
+        </select><br><br>
+
+        <div id="controles_fecha_diario" style="display:none;">
+            <label for="fecha_especifica">Seleccione Fecha:</label><br>
+            <input type="date" name="fecha_especifica" id="fecha_especifica"><br><br>
+        </div>
+
+        <div id="controles_fecha_semanal" style="display:none;">
+            <label for="semana_anio">Seleccione Semana y Año:</label><br>
+            <input type="week" name="semana_anio" id="semana_anio"><br><br>
+        </div>
+
+        <div id="controles_fecha_mensual" style="display:none;">
+            <label for="mes_anio">Seleccione Mes y Año:</label><br>
+            <input type="month" name="mes_anio" id="mes_anio"><br><br>
+        </div>
+
+        <div id="controles_fecha_anual" style="display:none;">
+            <label for="anio">Seleccione Año:</label><br>
+            <input type="number" name="anio" id="anio" min="2020" placeholder="<?php echo date('Y'); ?>"><br><br>
+        </div>
+        
+        <button type="submit">Generar Reporte</button>
+    </form>
+  </main>
+  <hr>
+  <footer>
+    <p>© HotelApp 2025 - Todos los derechos reservados</p>
+  </footer>
+
+<script>
+    const periodicidadSelect = document.getElementById('periodicidad');
+    const controlesDiario = document.getElementById('controles_fecha_diario');
+    const controlesSemanal = document.getElementById('controles_fecha_semanal');
+    const controlesMensual = document.getElementById('controles_fecha_mensual');
+    const controlesAnual = document.getElementById('controles_fecha_anual');
+
+    function actualizarControlesFecha() {
+        controlesDiario.style.display = 'none';
+        controlesSemanal.style.display = 'none';
+        controlesMensual.style.display = 'none';
+        controlesAnual.style.display = 'none';
+
+        document.getElementById('fecha_especifica').required = false;
+        document.getElementById('semana_anio').required = false;
+        document.getElementById('mes_anio').required = false;
+        document.getElementById('anio').required = false;
+
+
+        switch (periodicidadSelect.value) {
+            case 'diario':
+                controlesDiario.style.display = 'block';
+                document.getElementById('fecha_especifica').required = true;
+                if (!document.getElementById('fecha_especifica').value) {
+                     document.getElementById('fecha_especifica').valueAsDate = new Date();
+                }
+                break;
+            case 'semanal':
+                controlesSemanal.style.display = 'block';
+                document.getElementById('semana_anio').required = true;
+                // Para el input type="week", el valor por defecto es más complejo de setear al actual.
+                // Se podría dejar vacío o intentar calcularlo.
+                break;
+            case 'mensual':
+                controlesMensual.style.display = 'block';
+                document.getElementById('mes_anio').required = true;
+                if (!document.getElementById('mes_anio').value) {
+                    const hoy = new Date();
+                    document.getElementById('mes_anio').value = hoy.getFullYear() + '-' + ('0' + (hoy.getMonth() + 1)).slice(-2);
+                }
+                break;
+            case 'anual':
+                controlesAnual.style.display = 'block';
+                document.getElementById('anio').required = true;
+                 if (!document.getElementById('anio').value) {
+                    document.getElementById('anio').value = new Date().getFullYear();
+                }
+                break;
+        }
+    }
+    periodicidadSelect.addEventListener('change', actualizarControlesFecha);
+    // Llamar una vez al cargar para establecer el estado inicial
+    actualizarControlesFecha();
+</script>
+
+</body>
+</html>

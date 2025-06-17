@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acceso - Hotel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Raleway:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/login.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="login-hotel">
+  <div class="fondo-natural"></div>
+  
+  <div class="contenedor-cristal">
+    <div class="contenido-login">
+      <h1 class="mensaje-bienvenida">BIENVENIDO</h1>
+      <p class="subtitulo-elegante">Sistema del Hotel Mediterraneo</p>
+      
+      <form action="login.php" method="POST" class="formulario-elegante">
+        <div class="grupo-input-icono">
+          <i class="fas fa-id-card icono-input"></i>
+          <input type="text" id="dni" name="dni" placeholder="DNI" 
+                 maxlength="8" required pattern="\d{8}" 
+                 title="DNI de 8 dígitos" class="entrada-dni">
+        </div>
+        
+        <div class="grupo-input-icono">
+          <i class="fas fa-lock icono-input"></i>
+          <input type="password" id="clave" name="clave" placeholder="Contraseña" 
+                 minlength="6" required class="entrada-password">
+          <button type="button" class="boton-mostrar" onclick="mostrarClave()">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+        <button type="submit" class="boton-login-elegante">
+          INGRESAR <i class="fas fa-arrow-right"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+  function mostrarClave() {
+    const input = document.getElementById("clave");
+    input.type = (input.type === "password") ? "text" : "password";
+  }
+  </script>
+</body>
+</html>
