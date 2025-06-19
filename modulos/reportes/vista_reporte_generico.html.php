@@ -18,22 +18,21 @@
 <body>
   <header>
     <h1><?php echo htmlspecialchars($titulo_reporte_final); ?></h1>
-    <?php if ($subtitulo_reporte_final): ?>
+    <?php if (!empty($subtitulo_reporte_final)): ?>
         <h2><?php echo htmlspecialchars($subtitulo_reporte_final); ?></h2>
     <?php endif; ?>
     <nav>
-        <a href="../dashboard/reportes_dashboard.html">Volver a Selección de Reportes</a> |
-        <a href="../dashboard/recepcionista_dashboard.html">Volver al Panel Principal</a>
+        <!-- ¡RUTAS CORREGIDAS AQUÍ! -->
+        <a href="../dashboard/recepcionista_dashboard.php?load_module=modulos/reportes/reportes_content">Volver a Selección de Reportes</a> |
+        <a href="../dashboard/recepcionista_dashboard.php">Volver al Panel Principal</a>
     </nav>
   </header>
   <hr>
-
   <main>
     <?php if ($error_reporte): ?>
         <p class="error"><?php echo htmlspecialchars($error_reporte); ?></p>
     <?php elseif (!empty($datos_reporte)): ?>
     <table>
-        <caption><?php echo htmlspecialchars($titulo_reporte_final); ?></caption>
         <thead>
             <tr>
                 <?php foreach ($columnas_reporte as $columna): ?>
@@ -44,8 +43,8 @@
         <tbody>
             <?php foreach ($datos_reporte as $fila): ?>
             <tr>
-                <?php foreach ($fila as $valor_celda): // Asume que el orden de los datos en $fila coincide con $columnas_reporte ?>
-                    <td><?php echo htmlspecialchars(is_numeric($valor_celda) && !strpos($valor_celda, '.') ? $valor_celda : (is_numeric($valor_celda) ? number_format((float)$valor_celda, 2) : $valor_celda)); ?></td>
+                <?php foreach ($fila as $valor_celda): ?>
+                    <td><?php echo htmlspecialchars(is_numeric($valor_celda) && strpos($valor_celda, '.') !== false ? number_format((float)$valor_celda, 2) : $valor_celda); ?></td>
                 <?php endforeach; ?>
             </tr>
             <?php endforeach; ?>
