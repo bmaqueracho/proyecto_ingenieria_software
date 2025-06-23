@@ -2,22 +2,20 @@
 session_start();
 require_once '../../conexion.php'; // Correcto: Sube dos niveles a la raíz
 
-// --- VERIFICACIÓN DE SEGURIDAD ---
-if (!isset($_SESSION['usuario_id']) || $_SESSION['cargo'] !== 'Recepcionista') {
-    // Usamos un array para devolver un error JSON en caso de acceso no autorizado
-    // ya que este script no debería ser accedido directamente por un usuario.
+// --- VERIFICACIÓN DE SEGURIDAD --
+if (!isset($_SESSION['usuario_id']) || !in_array($_SESSION['cargo'], ['Recepcionista', 'Administrador'])) {
     http_response_code(403);
-    echo json_encode(['error' => 'Acceso denegado']);
+    echo json_encode(['error' => 'Acceso denegado. No tiene los permisos necesarios.']);
     exit();
 }
-
 $accion = $_POST['accion'] ?? null;
 
 if (empty($accion)) {
-    header("Location: ../dashboard/recepcionista_dashboard.php");
+    // Si no hay acción, redirigir al index principal
+    header("Location: ../../index.php");
     exit();
 }
-
+$redirect_url = $_POST['redirect_url'] ?? '../../index.php';
 // --- LÓGICA DE PROCESAMIENTO POST ---
 
 if ($accion === 'buscar') {
@@ -85,6 +83,6 @@ elseif ($accion === 'actualizar') {
 $conexion->close();
 
 // Al final, siempre redirigimos de vuelta al dashboard para que cargue el módulo de clientes.
-header("Location: ../dashboard/recepcionista_dashboard.php?load_module=modulos/clientes/clientes_content");
+header("Location: " . $redirect_url);
 exit();
 ?>

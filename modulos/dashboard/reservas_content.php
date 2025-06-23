@@ -1,24 +1,42 @@
 <?php
-// modulos/dashboard/reservas_content.php
-// Este es el reemplazo de tu reservas_dashboard.html
+// modulos/reservas/reservas_content.php
+
+// No se necesita lógica PHP aquí, es solo una vista de menú.
 ?>
+<!-- ========================================================================== -->
+<!-- ============== ¡ESTE ES EL DISEÑO PROFESIONAL DEL MÓDULO! ============== -->
+<!-- ========================================================================== -->
 <section id="gestion-reservas">
-  <h2 class="section-title"><i class="fas fa-calendar-check"></i> Gestión de Reservas</h2>
-  <p class="text-white-50 mb-4">Crea nuevas reservas o administra las existentes.</p>
-  <div class="row g-3">
-    <div class="col-md-4">
-      <a href="#" onclick="event.preventDefault(); cargarContenido('../reservas/nueva_reserva.php', this);" class="card action-card text-decoration-none text-white text-center p-4">
-        <div class="card-icon" style="background-color: rgba(233, 196, 106, 0.2);"><i class="fas fa-plus-circle"></i></div>
+
+  <!-- CAMBIO: Se usan las nuevas clases de título profesional -->
+  <h2 class="section-title">
+    <i class="fas fa-calendar-check"></i>
+    Gestión de Reservas
+  </h2>
+  <p class="section-subtitle">
+    Desde aquí puede iniciar el proceso para crear una nueva reserva para un cliente o administrar las reservas existentes.
+  </p>
+
+  <!-- CAMBIO: La estructura ahora usa las tarjetas de bienvenida rediseñadas -->
+  <div class="row g-4">
+    <div class="col-lg-4 col-md-6">
+      <a href="#" onclick="event.preventDefault(); cargarContenido('../reservas/nueva_reserva.php', this);" class="welcome-card text-decoration-none">
+        <div class="card-icon icon-reserva">
+          <i class="fas fa-plus-circle"></i>
+        </div>
         <h3>Nueva Reserva</h3>
-        <p class="text-white-50 mb-0">Iniciar el proceso de reserva.</p>
+        <p>Iniciar el proceso de reserva para un huésped.</p>
       </a>
     </div>
-    <div class="col-md-4">
-      <a href="#" onclick="event.preventDefault(); cargarContenido('../reservas/gestionar_reservas.php', this);" class="card action-card text-decoration-none text-white text-center p-4">
-        <div class="card-icon" style="background-color: rgba(106, 168, 79, 0.2);"><i class="fas fa-tasks"></i></div>
+    <div class="col-lg-4 col-md-6">
+      <a href="#" onclick="event.preventDefault(); cargarContenido('../reservas/gestionar_reservas.php', this);" class="welcome-card text-decoration-none">
+        <div class="card-icon icon-clientes">
+            <i class="fas fa-tasks"></i>
+        </div>
         <h3>Gestionar Reservas</h3>
-        <p class="text-white-50 mb-0">Ver, modificar o cancelar.</p>
+        <p>Ver, modificar o cancelar las reservas existentes.</p>
       </a>
     </div>
   </div>
+
 </section>

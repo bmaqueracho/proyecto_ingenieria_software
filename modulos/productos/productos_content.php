@@ -1,25 +1,43 @@
 <?php
-// ARCHIVO DE VISTA. Menú principal del módulo.
+// ARCHIVO DE VISTA: modulos/productos/productos_content.php
 session_start();
-// No necesita conexión a BD. Es solo HTML estático.
+// No se necesita lógica PHP, es solo una vista de menú.
 ?>
+
+<!-- ========================================================================== -->
+<!-- ============== ¡ESTE ES EL DISEÑO PROFESIONAL DEL MÓDULO! ============== -->
+<!-- ========================================================================== -->
 <section id="gestion-productos-ventas">
-  <h2 class="section-title"><i class="fas fa-boxes"></i> Gestión de Productos y Ventas</h2>
-  <p class="text-white-50 mb-4">Administra el inventario de productos o registra ventas a huéspedes.</p>
-  <div class="row g-3">
-    <div class="col-md-6">
-      <a href="#" onclick="event.preventDefault(); cargarContenido('../productos/productos_gestion.php');" class="card action-card text-decoration-none text-white text-center p-4">
-        <div class="card-icon" style="background-color: rgba(108, 117, 125, 0.2);"><i class="fas fa-cogs"></i></div>
+
+  <!-- CAMBIO: Títulos y subtítulos con el nuevo estilo profesional -->
+  <h2 class="section-title">
+    <i class="fas fa-boxes"></i>
+    Gestión de Productos y Ventas
+  </h2>
+  <p class="section-subtitle">
+    Desde aquí puede administrar el inventario de productos o registrar nuevas ventas a los huéspedes del hotel.
+  </p>
+
+  <!-- CAMBIO: La estructura ahora usa las tarjetas de bienvenida rediseñadas -->
+  <div class="row g-4">
+    <div class="col-lg-4 col-md-6">
+      <a href="#" onclick="event.preventDefault(); cargarContenido('../productos/productos_gestion.php');" class="welcome-card text-decoration-none">
+        <div class="card-icon" style="background-color: rgba(243, 156, 18, 0.1); color: #f39c12;">
+          <i class="fas fa-cogs"></i>
+        </div>
         <h3>Administrar Productos</h3>
-        <p class="text-white-50 mb-0">Ver stock, añadir, ajustar inventario.</p>
+        <p>Ver stock, añadir y ajustar inventario.</p>
       </a>
     </div>
-    <div class="col-md-6">
-      <a href="#" onclick="event.preventDefault(); cargarContenido('../productos/productos_venta.php');" class="card action-card text-decoration-none text-white text-center p-4">
-        <div class="card-icon" style="background-color: rgba(40, 167, 69, 0.2);"><i class="fas fa-cash-register"></i></div>
+    <div class="col-lg-4 col-md-6">
+      <a href="#" onclick="event.preventDefault(); cargarContenido('../productos/productos_venta.php');" class="welcome-card text-decoration-none">
+        <div class="card-icon" style="background-color: rgba(46, 204, 113, 0.1); color: #2ecc71;">
+            <i class="fas fa-cash-register"></i>
+        </div>
         <h3>Registrar Venta</h3>
-        <p class="text-white-50 mb-0">Venta de productos a clientes.</p>
+        <p>Venta de productos y servicios a clientes.</p>
       </a>
     </div>
   </div>
+
 </section>

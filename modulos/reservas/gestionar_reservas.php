@@ -1,92 +1,232 @@
 <?php
-// ARCHIVO DE VISTA. Solo muestra la tabla.
 session_start();
-require_once '../../conexion.php'; // Correcto: Sube dos niveles.
+require_once '../../conexion.php'; 
 
-if (!isset($_SESSION['usuario_id']) || ($_SESSION['cargo'] !== 'Recepcionista' && $_SESSION['cargo'] !== 'Administrador')) {
-    // Si la sesión se pierde, no mostramos nada. El JS mostrará un error.
+// ... (toda la lógica PHP de arriba se mantiene igual) ...
+if (!isset($_SESSION['usuario_id']) || !in_array($_SESSION['cargo'], ['Recepcionista', 'Administrador'])) {
     exit();
 }
-
 $reservas = [];
-$sql = "SELECT r.id AS reserva_id, r.fecha_reserva, r.fecha_entrada, r.fecha_salida,
-               r.monto_total, r.estado AS estado_reserva, r.modo_reserva, r.metodo_pago,
-               c.dni AS cliente_dni, c.nombres AS cliente_nombres, c.apellidos AS cliente_apellidos,
-               h.nombre AS nombre_habitacion,
-               u.nombre AS recepcionista_nombre, u.apellido AS recepcionista_apellido
+$sql = "SELECT r.id AS reserva_id, r.fecha_entrada, r.fecha_salida,
+               r.monto_total, r.estado AS estado_reserva,
+               c.nombres AS cliente_nombres, c.apellidos AS cliente_apellidos,
+               h.nombre AS nombre_habitacion
         FROM reservas r
         LEFT JOIN clientes c ON r.cliente_dni = c.dni
         LEFT JOIN habitaciones h ON r.habitacion_id = h.id
-        LEFT JOIN usuarios u ON r.usuario_id = u.id
         ORDER BY r.fecha_entrada DESC, r.id DESC";
-
-$result = $conn->query($sql);
+$result = $conexion->query($sql);
 if ($result) { while ($row = $result->fetch_assoc()) { $reservas[] = $row; } }
-
-// Mensaje de éxito global (p.ej. después de crear una reserva)
-$mensaje_exito_global = $_SESSION['mensaje_exito_global'] ?? null;
-unset($_SESSION['mensaje_exito_global']); // Limpiar para que se muestre solo una vez
-$conn->close();
+$mensaje_global = $_SESSION['mensaje_exito_global'] ?? null;
+unset($_SESSION['mensaje_exito_global']);
+$conexion->close();
 ?>
+<style>
+    .estado-badge { font-size: 0.8rem; padding: 0.4em 0.8em; border-radius: 20px; font-weight: 600; color: #fff; text-transform: uppercase; }
+    .estado-confirmada { background-color: #28a745; }
+    .estado-cancelada { background-color: #dc3545; }
+    .estado-completa { background-color: #17a2b8; }
+    
+    /* === CSS MEJORADO PARA EL DISEÑO MINIMALISTA === */
+    .actions-cell .dropdown-toggle {
+        background-color: transparent !important; /* Quita el fondo del botón */
+        border: none !important; /* Quita el borde */
+        box-shadow: none !important; /* Quita la sombra al hacer clic */
+        color: #6c757d; /* Color gris para el icono */
+        padding: 0.25rem 0.5rem;
+    }
 
-<!-- HTML de la tabla, sin <html>, <head>, etc. -->
+    .actions-cell .dropdown-toggle::after {
+        display: none; /* Oculta la flecha por defecto de Bootstrap */
+    }
+
+    .dropdown-menu {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        border: 1px solid #dee2e6;
+        padding-top: 0.5rem; /* Pequeño espacio arriba */
+        padding-bottom: 0.5rem; /* Pequeño espacio abajo */
+    }
+
+    /* ESTE ES EL CAMBIO CLAVE para quitar los puntos negros */
+    .dropdown-menu li {
+        list-style-type: none; /* Oculta los puntos de la lista */
+    }
+
+    .dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+    .dropdown-item i.fa, .dropdown-item i.fas {
+        width: 16px;
+        text-align: center;
+        color: #6c757d;
+    }
+    .dropdown-item:hover i {
+        color: inherit;
+    }
+</style>
+
 <section id="tabla-gestion-reservas">
+    <!-- ... (el encabezado de la sección no cambia) ... -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="section-title mb-0"><i class="fas fa-tasks"></i> Gestionar Reservas Existentes</h2>
-        <!-- Botón para ir a crear nueva reserva, usando la misma función JS -->
-        <button class="btn btn-success" onclick="cargarContenido('../reservas/nueva_reserva.php', this)">
-            <i class="fas fa-plus"></i> Crear Nueva Reserva
-        </button>
+        <div>
+            <h2 class="section-title mb-1"><i class="fas fa-tasks"></i> Gestionar Reservas</h2>
+            <p class="section-subtitle mb-0">Visualice y administre todas las reservas del hotel.</p>
+        </div>
+        <a href="#" class="btn btn-success" onclick="event.preventDefault(); cargarContenido('../reservas/nueva_reserva.php?limpiar_nr=1');">
+            <i class="fas fa-plus me-2"></i> Nueva Reserva
+        </a>
     </div>
 
-    <?php if ($mensaje_exito_global): ?><div class="alert alert-success"><?php echo $mensaje_exito_global; ?></div><?php endif; ?>
-    
-    <div class="table-responsive card action-card p-3">
-        <?php if (!empty($reservas)): ?>
-        <table class="table table-dark table-striped table-hover">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Cliente</th>
-                    <th>Habitación</th>
-                    <th>Entrada/Salida</th>
-                    <th>Monto</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($reservas as $reserva): 
-                    $fecha_e = new DateTime($reserva['fecha_entrada']);
-                    $fecha_s = new DateTime($reserva['fecha_salida']);
-                ?>
-                <tr>
-                    <td><?php echo htmlspecialchars($reserva['reserva_id']); ?></td>
-                    <td><?php echo htmlspecialchars($reserva['cliente_nombres'] . " " . $reserva['cliente_apellidos']); ?></td>
-                    <td><?php echo htmlspecialchars($reserva['nombre_habitacion'] ?? 'N/A'); ?></td>
-                    <td><?php echo $fecha_e->format('d/m/y H:i'); ?> → <?php echo $fecha_s->format('d/m/y H:i'); ?></td>
-                    <td>S/ <?php echo htmlspecialchars(number_format($reserva['monto_total'], 2)); ?></td>
-                    <td>
-                        <span class="badge bg-<?php 
-                            $color_map = ['Confirmada' => 'success', 'Cancelada' => 'danger', 'Completa' => 'primary'];
-                            echo $color_map[$reserva['estado_reserva']] ?? 'secondary';
-                        ?>">
-                            <?php echo htmlspecialchars($reserva['estado_reserva']); ?>
-                        </span>
-                    </td>
-                    <td>
-                        <!-- Estos links todavía recargarán la página. Se pueden adaptar después. -->
-                        <?php if ($reserva['estado_reserva'] === 'Confirmada'): ?>
-                            <a href="../reservas/procesar_cancelacion.php?id=<?php echo $reserva['reserva_id']; ?>" onclick="return confirm('¿Cancelar Reserva ID: <?php echo $reserva['reserva_id']; ?>?');" class="btn btn-sm btn-danger">X</a>
-                            <a href="../reservas/modificar_reserva.php?id=<?php echo $reserva['reserva_id']; ?>" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></a>
-                        <?php endif; ?>
-                    </td>
-                </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-        <?php else: ?>
-            <p class="text-center p-4">No hay reservas registradas.</p>
+    <!-- ... (alertas no cambian) ... -->
+    <div id="gest-alert-container">
+        <?php if ($mensaje_global): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <?php echo htmlspecialchars($mensaje_global); ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
         <?php endif; ?>
     </div>
+    
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <!-- ... (thead no cambia) ... -->
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="py-3 px-4">ID</th>
+                            <th class="py-3 px-4">Cliente</th>
+                            <th class="py-3 px-4">Habitación</th>
+                            <th class="py-3 px-4">Fechas</th>
+                            <th class="py-3 px-4">Monto</th>
+                            <th class="py-3 px-4">Estado</th>
+                            <th class="py-3 px-4 text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (!empty($reservas)): ?>
+                            <?php foreach ($reservas as $reserva): ?>
+                                <tr>
+                                    <!-- ... (otros <td> no cambian) ... -->
+                                    <td class="py-3 px-4"><strong>#<?php echo htmlspecialchars($reserva['reserva_id']); ?></strong></td>
+                                    <td class="py-3 px-4"><?php echo htmlspecialchars($reserva['cliente_nombres'] . " " . $reserva['cliente_apellidos']); ?></td>
+                                    <td class="py-3 px-4"><?php echo htmlspecialchars($reserva['nombre_habitacion'] ?? 'N/A'); ?></td>
+                                    <td class="py-3 px-4"><?php echo date("d/m/y", strtotime($reserva['fecha_entrada'])) . ' - ' . date("d/m/y", strtotime($reserva['fecha_salida'])); ?></td>
+                                    <td class="py-3 px-4">S/ <?php echo htmlspecialchars(number_format($reserva['monto_total'], 2)); ?></td>
+                                    <td class="py-3 px-4">
+                                        <?php $estado_clase = strtolower($reserva['estado_reserva']); ?>
+                                        <span class="estado-badge estado-<?php echo $estado_clase; ?>">
+                                            <?php echo htmlspecialchars($reserva['estado_reserva']); ?>
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4 text-center actions-cell">
+                                        <?php if ($reserva['estado_reserva'] === 'Confirmada'): ?>
+                                            <div class="btn-group">
+                                                <!-- === CAMBIO CLAVE EN EL HTML === -->
+                                                <!-- El botón ahora solo contiene un icono -->
+                                                <button type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="fas fa-ellipsis-v"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    <li><a class="dropdown-item" href="#" onclick="cambiarEstadoReserva(event, <?php echo $reserva['reserva_id']; ?>, 'Completa')"><i class="fas fa-check-double"></i> Marcar Completa</a></li>
+                                                    <li><a class="dropdown-item" href="#" onclick="cargarContenido('../reservas/modificar_reserva.php?id=<?php echo $reserva['reserva_id']; ?>')"><i class="fas fa-edit"></i> Modificar</a></li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li><a class="dropdown-item text-danger" href="#" onclick="cancelarReserva(event, <?php echo $reserva['reserva_id']; ?>)"><i class="fas fa-times-circle"></i> Cancelar Reserva</a></li>
+                                                </ul>
+                                            </div>
+                                        <?php else: ?>
+                                            <span class="text-muted fst-italic">--</span>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr><td colspan="7" class="text-center p-5 text-muted">No hay reservas registradas.</td></tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </section>
+<!-- 3. JAVASCRIPT (Controlador de acciones para esta vista) -->
+<!-- ======================================================== -->
+<script>
+    // Desvanecer la alerta de éxito después de 5 segundos
+    const gestAlert = document.querySelector('#gest-alert-container .alert');
+    if (gestAlert) {
+        setTimeout(() => { new bootstrap.Alert(gestAlert).close(); }, 5000);
+    }
+    
+    /**
+     * Cambia el estado de una reserva a 'Completa' usando AJAX.
+     * Llama a procesar_estado_reserva.php que ya tienes.
+     */
+    function cambiarEstadoReserva(event, reservaId, nuevoEstado) {
+        event.preventDefault();
+        if (!confirm(`¿Estás seguro de que quieres marcar la reserva #${reservaId} como '${nuevoEstado}'?`)) {
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('id', reservaId);
+        formData.append('nuevo_estado', nuevoEstado);
+        
+        document.getElementById('contentArea').style.opacity = '0.5';
+
+        fetch('../reservas/procesar_estado_reserva.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                cargarContenido('../reservas/gestionar_reservas.php');
+            } else {
+                alert('Error: ' + data.message);
+                document.getElementById('contentArea').style.opacity = '1';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Ocurrió un error de conexión.');
+            document.getElementById('contentArea').style.opacity = '1';
+        });
+    }
+
+    /**
+     * Cancela una reserva usando AJAX.
+     * Llama a procesar_cancelacion.php que ya tienes.
+     */
+    function cancelarReserva(event, reservaId) {
+        event.preventDefault();
+        if (!confirm(`¡ATENCIÓN! ¿Realmente deseas CANCELAR la reserva #${reservaId}? Esta acción es irreversible.`)) {
+            return;
+        }
+
+        document.getElementById('contentArea').style.opacity = '0.5';
+
+        fetch(`../reservas/procesar_cancelacion.php?id=${reservaId}`)
+        .then(response => {
+            if (!response.ok) return response.json().then(err => { throw new Error(err.message); });
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 'success') {
+                cargarContenido('../reservas/gestionar_reservas.php');
+            } else {
+                alert('Error: ' + data.message);
+                document.getElementById('contentArea').style.opacity = '1';
+            }
+        })
+        .catch(error => {
+            console.error('Error al cancelar:', error);
+            alert('Ocurrió un error: ' + error.message);
+            document.getElementById('contentArea').style.opacity = '1';
+        });
+    }
+</script>

@@ -3,49 +3,329 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Acceso - Hotel</title>
+  <title>Acceso | Hotel Mediterraneo</title>
+  
+  <!-- Fuentes Externas (Necesarias) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Raleway:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../../css/login.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body class="login-hotel">
-  <div class="fondo-natural"></div>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
   
-  <div class="contenedor-cristal">
-    <div class="contenido-login">
-      <h1 class="mensaje-bienvenida">BIENVENIDO</h1>
-      <p class="subtitulo-elegante">Sistema del Hotel Mediterraneo</p>
-      
-      <form action="login.php" method="POST" class="formulario-elegante">
-        <div class="grupo-input-icono">
-          <i class="fas fa-id-card icono-input"></i>
-          <input type="text" id="dni" name="dni" placeholder="DNI" 
-                 maxlength="8" required pattern="\d{8}" 
-                 title="DNI de 8 dígitos" class="entrada-dni">
+  <!-- Iconos de FontAwesome (Necesarios) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- ========================================================== -->
+  <!-- ============== ¡TODA LA MAGIA DEL CSS ESTÁ AQUÍ! ============== -->
+  <!-- ========================================================== -->
+  <style>
+    /* ======================================== */
+    /* RESET Y CONFIGURACIÓN GLOBAL             */
+    /* ======================================== */
+    :root {
+      --fuente-titulos: 'Playfair Display', serif;
+      --fuente-textos: 'Montserrat', sans-serif;
+      --color-primario: #0B2027; /* Azul noche profundo */
+      --color-secundario: #40798C; /* Azul acero */
+      --color-acento: #70A9A1; /* Verde menta suave */
+      --color-texto-claro: #F6F1D1; /* Crema claro */
+      --color-fondo: #EAF0CE; /* Fondo muy claro */
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: var(--fuente-textos);
+      background-color: var(--color-fondo);
+      background-image: url('https://i.pinimg.com/originals/81/25/94/812594191535b91b5b145a49938816eca.jpg');
+      background-size: cover;
+      background-position: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    /* ======================================== */
+    /* CONTENEDOR PRINCIPAL DEL LOGIN           */
+    /* ======================================== */
+    .login-wrapper {
+      width: 900px;
+      max-width: 95vw;
+      height: 600px;
+      display: flex;
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+      overflow: hidden;
+      animation: fadeIn 1s ease-out;
+    }
+
+    /* ======================================== */
+    /* PANEL IZQUIERDO (DE MARCA)               */
+    /* ======================================== */
+    .info-panel {
+      flex: 1;
+      background: linear-gradient(160deg, var(--color-secundario) 0%, var(--color-primario) 100%);
+      color: var(--color-texto-claro);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .info-content {
+      animation: slideUp 1s ease-out;
+    }
+
+    .info-panel .logo {
+      font-family: var(--fuente-titulos);
+      font-size: 2rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 1.5rem;
+    }
+
+    .info-panel .logo .fa-hotel {
+      font-size: 2.5rem;
+      color: var(--color-acento);
+    }
+
+    .info-panel .slogan {
+      font-size: 1.1rem;
+      font-weight: 400;
+      line-height: 1.6;
+      max-width: 300px;
+    }
+
+    /* ======================================== */
+    /* PANEL DERECHO (DEL FORMULARIO)           */
+    /* ======================================== */
+    .form-panel {
+      flex: 1.2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 3rem;
+    }
+
+    .form-container {
+      width: 100%;
+      max-width: 380px;
+      animation: slideUp 1s ease-out 0.2s;
+      animation-fill-mode: backwards;
+    }
+
+    .form-panel h1 {
+      font-family: var(--fuente-titulos);
+      font-size: 2.5rem;
+      color: var(--color-primario);
+      margin-bottom: 0.5rem;
+    }
+
+    .form-panel .subtitulo {
+      color: #777;
+      margin-bottom: 2.5rem;
+    }
+
+    /* ======================================== */
+    /* GRUPOS DE INPUTS CON ETIQUETA FLOTANTE   */
+    /* ======================================== */
+    .input-group {
+      position: relative;
+      margin-bottom: 2rem;
+    }
+
+    .input-group input {
+      width: 100%;
+      border: none;
+      border-bottom: 2px solid #ccc;
+      padding: 10px 0;
+      background: transparent;
+      font-size: 1rem;
+      outline: none;
+      position: relative;
+      z-index: 1;
+    }
+
+    .input-group label {
+      position: absolute;
+      top: 10px;
+      left: 0;
+      color: #999;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .input-group label i {
+      margin-right: 8px;
+    }
+
+    .input-group input:focus + label,
+    .input-group input:not(:placeholder-shown) + label {
+      top: -16px;
+      font-size: 0.85rem;
+      color: var(--color-secundario);
+    }
+
+    .input-group .boton-mostrar {
+      position: absolute;
+      right: 0;
+      top: 10px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      color: #aaa;
+      z-index: 2;
+      font-size: 1rem;
+    }
+
+    /* ======================================== */
+    /* MENSAJE DE ERROR Y BOTÓN DE LOGIN        */
+    /* ======================================== */
+    .error-message {
+      background-color: #ffebee;
+      color: #c62828;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 1.5rem;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+
+    .boton-login {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(90deg, var(--color-secundario) 0%, var(--color-acento) 100%);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin-top: 1rem;
+    }
+
+    .boton-login:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 20px -10px var(--color-secundario);
+    }
+
+    /* ======================================== */
+    /* ANIMACIONES Y RESPONSIVIDAD              */
+    /* ======================================== */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.98); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    @media (max-width: 800px) {
+      .login-wrapper {
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        max-height: none;
+        border-radius: 0;
+        box-shadow: none;
+      }
+      .info-panel {
+        display: none; 
+      }
+      .form-panel {
+        flex: 1;
+        padding: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-wrapper">
+    
+    <div class="info-panel">
+      <div class="info-content">
+        <div class="logo">
+          <i class="fas fa-hotel"></i>
+          <span>Hotel Mediterraneo</span>
         </div>
-        
-        <div class="grupo-input-icono">
-          <i class="fas fa-lock icono-input"></i>
-          <input type="password" id="clave" name="clave" placeholder="Contraseña" 
-                 minlength="6" required class="entrada-password">
-          <button type="button" class="boton-mostrar" onclick="mostrarClave()">
-            <i class="fas fa-eye"></i>
-          </button>
-        </div>
-        <button type="submit" class="boton-login-elegante">
-          INGRESAR <i class="fas fa-arrow-right"></i>
-        </button>
-      </form>
+        <p class="slogan">La excelencia en hospitalidad, a un clic de distancia.</p>
+      </div>
     </div>
+
+    <div class="form-panel">
+      <div class="form-container">
+        <h1>Bienvenido de Nuevo</h1>
+        <p class="subtitulo">Por favor, inicie sesión para continuar.</p>
+        
+        <div id="error-container" class="error-message" style="display:none;"></div>
+
+        <form action="login.php" method="POST" id="loginForm">
+          
+          <div class="input-group">
+            <input type="text" id="dni" name="dni" required pattern="\d{8,10}" title="DNI de 8 a 10 dígitos" placeholder=" ">
+            <label for="dni"><i class="fas fa-id-card"></i> DNI</label>
+          </div>
+          
+          <div class="input-group">
+            <input type="password" id="clave" name="clave" required minlength="6" placeholder=" ">
+            <label for="clave"><i class="fas fa-lock"></i> Contraseña</label>
+            <button type="button" class="boton-mostrar" onclick="togglePasswordVisibility()">
+              <i id="ojo-icono" class="fas fa-eye"></i>
+            </button>
+          </div>
+
+          <button type="submit" class="boton-login">
+            <span>Ingresar</span>
+            <i class="fas fa-arrow-right"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+
   </div>
 
   <script>
-  function mostrarClave() {
-    const input = document.getElementById("clave");
-    input.type = (input.type === "password") ? "text" : "password";
-  }
+    function togglePasswordVisibility() {
+      const inputClave = document.getElementById("clave");
+      const iconoOjo = document.getElementById("ojo-icono");
+      if (inputClave.type === "password") {
+        inputClave.type = "text";
+        iconoOjo.classList.replace("fa-eye", "fa-eye-slash");
+      } else {
+        inputClave.type = "password";
+        iconoOjo.classList.replace("fa-eye-slash", "fa-eye");
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const error = urlParams.get('error');
+      if (error) {
+        const errorContainer = document.getElementById('error-container');
+        errorContainer.textContent = decodeURIComponent(error);
+        errorContainer.style.display = 'block';
+      }
+    });
   </script>
+
 </body>
 </html>

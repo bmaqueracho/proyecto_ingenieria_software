@@ -51,3 +51,18 @@ async function cargarContenido(pathModulo, clickedLink) {
         contentArea.innerHTML = `<p class="text-center text-danger">Error al cargar el contenido.</p>`;
     }
 }
+// Nueva función para manejar la generación de reportes
+function generarReporteEnPagina(form) {
+    const formData = new FormData(form);
+    const params = new URLSearchParams(formData).toString();
+    const url = `../reportes/generar_reporte.php?${params}`;
+
+    // Obtenemos el iframe oculto
+    const iframe = document.getElementById('iframe-reporte');
+    
+    // Mostramos un aviso al usuario
+    alert('Generando reporte... La ventana de impresión/guardado aparecerá en unos segundos.');
+    
+    // Cargamos la URL del reporte en el iframe
+    iframe.src = url;
+}

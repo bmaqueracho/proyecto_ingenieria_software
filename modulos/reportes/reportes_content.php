@@ -1,25 +1,44 @@
 <?php
-// ARCHIVO DE VISTA: Muestra el formulario para generar reportes.
+// ==================================================================
+// ESTA PARTE ES LA CLAVE DE LA SOLUCIÓN
+// ==================================================================
+// Como este archivo se carga vía AJAX (fetch), debe iniciar su
+// propio entorno en cada llamada.
+
+// 1. Iniciar la sesión para poder verificar los permisos.
 session_start();
-if (!isset($_SESSION['usuario_id']) || !in_array($_SESSION['cargo'], ['Recepcionista', 'Administrador'])) {
-    exit(); 
+
+// 2. Incluir la conexión para tener acceso a la constante BASE_URL.
+// La ruta es relativa a ESTE archivo (reportes_content.php).
+// Desde /modulos/reportes/, subimos dos niveles (a /) para encontrarlo.
+require_once '../../conexion.php'; 
+
+// 3. Verificar los permisos de nuevo. Es una buena práctica de seguridad.
+if (!isset($_SESSION['usuario_id']) || !in_array($_SESSION['cargo'], ['Recepcionista', 'Administrador'])) { 
+    // Si la seguridad falla, muestra un error claro en lugar de una página en blanco.
+    exit('<div class="alert alert-danger"><strong>Error:</strong> Acceso no autorizado a este módulo.</div>'); 
 }
 ?>
 
+<!-- El resto del archivo es el formulario que ya teníamos, ahora funcionará -->
 <section id="generador-reportes">
     <h2 class="section-title"><i class="fas fa-chart-bar"></i> Generación de Reportes</h2>
-    <p class="text-white-50 mb-4">Seleccione un tipo de reporte y el rango de fechas para generar una vista detallada.</p>
+    <p class="section-subtitle">Seleccione un tipo de reporte y el rango de fechas para generar una vista detallada.</p>
 
     <div class="card action-card p-4">
-        <form action="../reportes/generar_reporte.php" method="GET" target="_blank">
+        <!-- 
+            Ahora esta línea funcionará, porque BASE_URL está definida
+            gracias al require_once de arriba.
+        -->
+        <form action="<?php echo BASE_URL; ?>/modulos/reportes/generar_reporte.php" method="GET" target="_blank">
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label for="tipo_reporte" class="form-label">Tipo de Reporte:</label>
                     <select name="tipo_reporte" id="tipo_reporte" class="form-select" required>
                         <option value="ingresos_totales">Ingresos Totales (Reservas + Ventas)</option>
-                        <option value="ocupacion_hotel">Ocupación del Hotel</option>
-                        <option value="reservas_resumen">Resumen de Reservas</option>
-                        <option value="ventas_productos_resumen">Resumen de Venta de Productos</option>
+                        <option value="ocupacion_hotel">Ocupación del Hotel (Noches vendidas)</option>
+                        <option value="reservas_resumen">Resumen de Reservas (Cantidad, Promedio Estancia)</option>
+                        <option value="ventas_productos_resumen">Resumen de Venta de Productos (Cantidad, Monto)</option>
                         <option value="stock_productos_critico">Productos con Stock Crítico</option>
                     </select>
                 </div>
@@ -35,82 +54,72 @@ if (!isset($_SESSION['usuario_id']) || !in_array($_SESSION['cargo'], ['Recepcion
             </div>
 
             <div id="controles_fecha_diario" class="mb-3" style="display:none;">
-                <label for="fecha_especifica" class="form-label">Seleccione Fecha:</label>
+                <label class="form-label">Seleccione Fecha:</label>
                 <input type="date" name="fecha_especifica" id="fecha_especifica" class="form-control">
             </div>
             <div id="controles_fecha_semanal" class="mb-3" style="display:none;">
-                <label for="semana_anio" class="form-label">Seleccione Semana y Año:</label>
+                <label class="form-label">Seleccione Semana y Año:</label>
                 <input type="week" name="semana_anio" id="semana_anio" class="form-control">
             </div>
             <div id="controles_fecha_mensual" class="mb-3" style="display:none;">
-                <label for="mes_anio" class="form-label">Seleccione Mes y Año:</label>
+                <label class="form-label">Seleccione Mes y Año:</label>
                 <input type="month" name="mes_anio" id="mes_anio" class="form-control">
             </div>
             <div id="controles_fecha_anual" class="mb-3" style="display:none;">
-                <label for="anio" class="form-label">Seleccione Año:</label>
+                <label class="form-label">Seleccione Año:</label>
                 <input type="number" name="anio" id="anio" class="form-control" min="2020" placeholder="<?php echo date('Y'); ?>">
             </div>
             
-            <div class="d-grid">
-                <button type="submit" class="btn btn-lg btn-primary"><i class="fas fa-file-alt"></i> Generar Reporte</button>
+            <div class="d-grid mt-4">
+                <button type="submit" class="btn btn-lg btn-primary">
+                    <i class="fas fa-download me-2"></i>Generar y Descargar 
+                </button>
             </div>
         </form>
     </div>
 </section>
 
-<!-- El script para los controles de fecha -->
+<!-- El script JS para mostrar/ocultar campos se queda igual -->
 <script>
-    // Se definen los elementos una vez que el script se ejecuta
-    const periodicidadSelect = document.getElementById('periodicidad');
-    const controlesDiario = document.getElementById('controles_fecha_diario');
-    const controlesSemanal = document.getElementById('controles_fecha_semanal');
-    const controlesMensual = document.getElementById('controles_fecha_mensual');
-    const controlesAnual = document.getElementById('controles_fecha_anual');
-
-    // La función que muestra u oculta los controles
-    function actualizarControlesFecha() {
-        if (!periodicidadSelect) return; // Si el elemento no existe, no hacer nada
+    // Tu script para manejar los controles de fecha ya estaba bien.
+    (function() {
+        const tipoReporteSelect = document.getElementById('tipo_reporte');
+        const periodicidadSelect = document.getElementById('periodicidad');
+        const periodicidadContainer = periodicidadSelect.closest('.col-md-6');
+        const controles = {
+            diario: document.getElementById('controles_fecha_diario'),
+            semanal: document.getElementById('controles_fecha_semanal'),
+            mensual: document.getElementById('controles_fecha_mensual'),
+            anual: document.getElementById('controles_fecha_anual')
+        };
+        const inputs = {
+            diario: document.getElementById('fecha_especifica'),
+            semanal: document.getElementById('semana_anio'),
+            mensual: document.getElementById('mes_anio'),
+            anual: document.getElementById('anio')
+        };
         
-        // Ocultar todos los controles primero
-        controlesDiario.style.display = 'none';
-        controlesSemanal.style.display = 'none';
-        controlesMensual.style.display = 'none';
-        controlesAnual.style.display = 'none';
+        function actualizarControles() {
+            const esStockCritico = tipoReporteSelect.value === 'stock_productos_critico';
+            
+            periodicidadContainer.style.display = esStockCritico ? 'none' : 'block';
+            Object.values(controles).forEach(el => el.style.display = 'none');
+            Object.values(inputs).forEach(el => el.required = false);
+            periodicidadSelect.required = !esStockCritico;
 
-        // Desactivar 'required' para todos los inputs
-        document.getElementById('fecha_especifica').required = false;
-        document.getElementById('semana_anio').required = false;
-        document.getElementById('mes_anio').required = false;
-        document.getElementById('anio').required = false;
-
-        // Mostrar y configurar el control correcto
-        switch (periodicidadSelect.value) {
-            case 'diario':
-                controlesDiario.style.display = 'block';
-                document.getElementById('fecha_especifica').required = true;
-                if (!document.getElementById('fecha_especifica').value) { document.getElementById('fecha_especifica').valueAsDate = new Date(); }
-                break;
-            case 'semanal':
-                controlesSemanal.style.display = 'block';
-                document.getElementById('semana_anio').required = true;
-                break;
-            case 'mensual':
-                controlesMensual.style.display = 'block';
-                document.getElementById('mes_anio').required = true;
-                if (!document.getElementById('mes_anio').value) { const hoy = new Date(); document.getElementById('mes_anio').value = hoy.getFullYear() + '-' + ('0' + (hoy.getMonth() + 1)).slice(-2); }
-                break;
-            case 'anual':
-                controlesAnual.style.display = 'block';
-                document.getElementById('anio').required = true;
-                if (!document.getElementById('anio').value) { document.getElementById('anio').value = new Date().getFullYear(); }
-                break;
+            if (!esStockCritico) {
+                const seleccion = periodicidadSelect.value;
+                if (controles[seleccion]) {
+                    controles[seleccion].style.display = 'block';
+                    if (inputs[seleccion]) {
+                        inputs[seleccion].required = true;
+                    }
+                }
+            }
         }
-    }
-    
-    // Se añade el 'listener' al selector de periodicidad
-    if (periodicidadSelect) {
-        periodicidadSelect.addEventListener('change', actualizarControlesFecha);
-        // Se ejecuta la función una vez para establecer el estado inicial correcto
-        actualizarControlesFecha();
-    }
+        
+        tipoReporteSelect.addEventListener('change', actualizarControles);
+        periodicidadSelect.addEventListener('change', actualizarControles);
+        actualizarControles();
+    })();
 </script>

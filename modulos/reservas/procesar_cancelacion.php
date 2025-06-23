@@ -1,65 +1,71 @@
 <?php
 session_start();
-require_once '../../conexion.php'; // $conn
+require_once '../../conexion.php'; // Esto crea la variable $conexion
 
-// Verificar sesión y rol
-if (!isset($_SESSION['usuario_id']) || ($_SESSION['cargo'] !== 'Recepcionista' && $_SESSION['cargo'] !== 'Administrador')) {
-    $_SESSION['mensaje_error'] = "Acceso denegado.";
-    header("Location: ../autch/login.html");
-    exit();
-}
+// --- RESPUESTA POR DEFECTO ---
+// Preparar un array para la respuesta JSON.
+// Por defecto, asumimos que habrá un error.
+$response = ['status' => 'error', 'message' => 'Ocurrió un error inesperado.'];
+http_response_code(500); // Código de error de servidor por defecto
 
-if (!isset($_GET['id']) || !ctype_digit((string)$_GET['id'])) {
-    $_SESSION['mensaje_error'] = "ID de reserva no válido.";
-    header("Location: gestionar_reservas.php");
-    exit();
-}
+// --- VERIFICACIÓN DE SEGURIDAD ---
+if (!isset($_SESSION['usuario_id']) || !in_array($_SESSION['cargo'], ['Recepcionista', 'Administrador'])) {
+    http_response_code(403); // Forbidden
+    $response['message'] = 'Acceso denegado.';
+} 
+// --- VALIDACIÓN DE DATOS ---
+elseif (!isset($_GET['id']) || !ctype_digit((string)$_GET['id'])) {
+    http_response_code(400); // Bad Request
+    $response['message'] = 'ID de reserva no válido.';
+} 
+else {
+    // --- LÓGICA DE NEGOCIO ---
+    $reserva_id = (int)$_GET['id'];
 
-$reserva_id = (int)$_GET['id'];
+    try {
+        // Verificar que la reserva existe y está 'Confirmada'
+        // *** CORRECCIÓN: Usar $conexion ***
+        $stmt_check = $conexion->prepare("SELECT estado FROM reservas WHERE id = ?");
+        $stmt_check->bind_param("i", $reserva_id);
+        $stmt_check->execute();
+        $reserva_actual = $stmt_check->get_result()->fetch_assoc();
+        $stmt_check->close();
 
-// Verificar que la reserva existe y está 'Confirmada' antes de cancelar
-$stmt_check = $conn->prepare("SELECT estado FROM reservas WHERE id = ?");
-$stmt_check->bind_param("i", $reserva_id);
-$stmt_check->execute();
-$result_check = $stmt_check->get_result();
+        if (!$reserva_actual) {
+            http_response_code(404); // Not Found
+            $response['message'] = "Reserva con ID $reserva_id no encontrada.";
+        } elseif ($reserva_actual['estado'] !== 'Confirmada' && $reserva_actual['estado'] !== 'Pendiente') {
+            http_response_code(409); // Conflict
+            $response['message'] = "Solo se pueden cancelar reservas 'Confirmadas' o 'Pendientes'.";
+        } else {
+            // Proceder con la cancelación
+            // *** CORRECCIÓN: Usar $conexion ***
+            $stmt = $conexion->prepare("UPDATE reservas SET estado = 'Cancelada' WHERE id = ?");
+            $stmt->bind_param("i", $reserva_id);
+            
+            if ($stmt->execute() && $stmt->affected_rows > 0) {
+                http_response_code(200); // OK
+                $response = ['status' => 'success', 'message' => "Reserva ID $reserva_id cancelada exitosamente."];
+                
+                // Guardamos el mensaje de éxito en la sesión para mostrarlo al recargar la tabla
+                $_SESSION['mensaje_exito_global'] = $response['message'];
 
-if ($result_check->num_rows === 0) {
-    $_SESSION['mensaje_error'] = "Reserva con ID $reserva_id no encontrada.";
-    $stmt_check->close();
-    header("Location: gestionar_reservas.php");
-    exit();
-}
+            } else {
+                $response['message'] = "La reserva ID $reserva_id no se pudo cancelar (puede que su estado haya cambiado).";
+            }
+            $stmt->close();
+        }
 
-$reserva_actual = $result_check->fetch_assoc();
-$stmt_check->close();
-
-if ($reserva_actual['estado'] !== 'Confirmada') {
-    $_SESSION['mensaje_error'] = "Solo se pueden cancelar reservas que estén 'Confirmadas'. Esta reserva está '{$reserva_actual['estado']}'.";
-    header("Location: gestionar_reservas.php");
-    exit();
-}
-
-// Proceder con la cancelación
-$stmt = $conn->prepare("UPDATE reservas SET estado = 'Cancelada' WHERE id = ? AND estado = 'Confirmada'");
-$stmt->bind_param("i", $reserva_id);
-
-if ($stmt->execute()) {
-    if ($stmt->affected_rows > 0) {
-        $_SESSION['mensaje_exito'] = "Reserva ID $reserva_id cancelada exitosamente.";
-        // Aquí NO actualizamos habitaciones.estado, según tu último requerimiento.
-        // El trigger `actualizar_estado_habitacion_v2` (si lo creaste y mantuviste) podría manejar
-        // el cambio de estado de la habitación a 'Disponible' si estaba en 'Mantenimiento' por la reserva.
-        // Pero como dijiste que no usaríamos triggers para esto, la habitación simplemente
-        // vuelve a estar disponible para ser reservada en ese rango de fechas.
-    } else {
-        $_SESSION['mensaje_info'] = "La reserva ID $reserva_id no se pudo cancelar (quizás ya estaba cancelada o su estado cambió).";
+    } catch (Exception $e) {
+        // En caso de un error de base de datos no esperado
+        $response['message'] = "Error del servidor: " . $e->getMessage();
     }
-} else {
-    $_SESSION['mensaje_error'] = "Error al cancelar la reserva ID $reserva_id: " . $stmt->error;
 }
 
-$stmt->close();
-$conn->close();
-header("Location: gestionar_reservas.php");
+// --- RESPUESTA FINAL ---
+// Cerramos la conexión y enviamos la respuesta JSON al cliente (JavaScript)
+$conexion->close();
+header('Content-Type: application/json');
+echo json_encode($response);
 exit();
 ?>
