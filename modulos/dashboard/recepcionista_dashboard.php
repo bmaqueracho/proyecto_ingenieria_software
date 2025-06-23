@@ -502,6 +502,10 @@ if (!isset($_SESSION['usuario_id']) || !in_array($_SESSION['cargo'], ['Recepcion
       height: 100%;
       border: none;
     }
+    #wrapper {
+      max-width: 90%;
+      margin: 0 auto;
+    }
   </style>
 </head>
 

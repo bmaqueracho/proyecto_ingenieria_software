@@ -48,12 +48,34 @@ switch ($accion) {
         break;
 
     case 'registrar_cliente_reserva':
-        $dni_reg = trim($_POST['dni_reg']);
-        // ... (resto de variables)
-        $nombres_reg = trim($_POST['nombres_reg']);
-        $apellidos_reg = trim($_POST['apellidos_reg']);
-        $telefono_reg = !empty($_POST['telefono_reg']) ? trim($_POST['telefono_reg']) : null;
-        
+        $dni_reg = trim($_POST['dni_reg'] ?? '');
+        $nombres_reg = trim($_POST['nombres_reg'] ?? '');
+        $apellidos_reg = trim($_POST['apellidos_reg'] ?? '');
+        $telefono_reg = trim($_POST['telefono_reg'] ?? '');
+
+        // Validaciones básicas
+        if (!preg_match('/^[0-9]{6,15}$/', $dni_reg)) {
+            $_SESSION['mensaje_reserva'] = ['tipo' => 'danger', 'texto' => "El DNI debe contener solo dígitos (6 a 15 caracteres)."];
+            $response = ['status' => 'error', 'action' => 'reload_form'];
+            break;
+        }
+        if (!preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{3,50}$/u', $nombres_reg)) {
+            $_SESSION['mensaje_reserva'] = ['tipo' => 'danger', 'texto' => "Los nombres solo deben contener letras y espacios (mín. 3 caracteres)."];
+            $response = ['status' => 'error', 'action' => 'reload_form'];
+            break;
+        }
+        if (!preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{3,50}$/u', $apellidos_reg)) {
+            $_SESSION['mensaje_reserva'] = ['tipo' => 'danger', 'texto' => "Los apellidos solo deben contener letras y espacios (mín. 3 caracteres)."];
+            $response = ['status' => 'error', 'action' => 'reload_form'];
+            break;
+        }
+        if (!empty($telefono_reg) && !preg_match('/^[0-9]{6,15}$/', $telefono_reg)) {
+            $_SESSION['mensaje_reserva'] = ['tipo' => 'danger', 'texto' => "El teléfono debe contener solo dígitos (mín. 6 caracteres si se proporciona)."];
+            $response = ['status' => 'error', 'action' => 'reload_form'];
+            break;
+        }
+
+        // Verificar duplicado
         $stmt_check = $conexion->prepare("SELECT dni FROM clientes WHERE dni = ?");
         $stmt_check->bind_param("s", $dni_reg);
         $stmt_check->execute();
@@ -64,15 +86,16 @@ switch ($accion) {
                 $_SESSION['nr_cliente_info'] = ['dni' => $dni_reg, 'nombres' => $nombres_reg, 'apellidos' => $apellidos_reg];
                 $_SESSION['mensaje_reserva'] = ['tipo' => 'success', 'texto' => "Cliente " . htmlspecialchars($nombres_reg) . " registrado y seleccionado."];
             } else {
-                 $_SESSION['mensaje_reserva'] = ['tipo' => 'danger', 'texto' => "Error al registrar cliente."];
+                $_SESSION['mensaje_reserva'] = ['tipo' => 'danger', 'texto' => "Error al registrar cliente."];
             }
             $stmt_insert->close();
         } else {
-             $_SESSION['mensaje_reserva'] = ['tipo' => 'warning', 'texto' => "Cliente con DNI " . htmlspecialchars($dni_reg) . " ya existe. Búsquelo."];
+            $_SESSION['mensaje_reserva'] = ['tipo' => 'warning', 'texto' => "Cliente con DNI " . htmlspecialchars($dni_reg) . " ya existe. Búsquelo."];
         }
         $stmt_check->close();
         $response = ['status' => 'ok', 'action' => 'reload_form'];
         break;
+
 
     case 'buscar_habitaciones':
         if (!isset($_SESSION['nr_cliente_info'])) {
@@ -94,13 +117,20 @@ switch ($accion) {
                 $fecha_entrada_sql = $fecha_entrada_str . " 14:00:00";
                 $fecha_salida_sql = $fecha_salida_str . " 12:00:00";
                 $sql_disponibles = "SELECT h.id, h.nombre AS nombre_habitacion, h.precio, h.capacidad, th.nombre AS tipo_nombre FROM habitaciones h JOIN tipo_habitacion th ON h.tipo_id = th.id WHERE h.estado = 'Disponible' AND h.capacidad >= ?";
-                $params = [$capacidad_filtro]; $types = "i";
-                if (!empty($tipo_id_filtro)) { $sql_disponibles .= " AND h.tipo_id = ?"; $params[] = $tipo_id_filtro; $types .= "i"; }
+                $params = [$capacidad_filtro];
+                $types = "i";
+                if (!empty($tipo_id_filtro)) {
+                    $sql_disponibles .= " AND h.tipo_id = ?";
+                    $params[] = $tipo_id_filtro;
+                    $types .= "i";
+                }
                 $sql_disponibles .= " AND h.id NOT IN (SELECT r.habitacion_id FROM reservas r WHERE r.habitacion_id IS NOT NULL AND r.estado = 'Confirmada' AND (r.fecha_entrada < ? AND r.fecha_salida > ?)) ORDER BY h.nombre";
-                array_push($params, $fecha_salida_sql, $fecha_entrada_sql); $types .= "ss";
-                
+                array_push($params, $fecha_salida_sql, $fecha_entrada_sql);
+                $types .= "ss";
+
                 $stmt_disp = $conexion->prepare($sql_disponibles);
-                $stmt_disp->bind_param($types, ...$params); $stmt_disp->execute();
+                $stmt_disp->bind_param($types, ...$params);
+                $stmt_disp->execute();
                 $habitaciones = $stmt_disp->get_result()->fetch_all(MYSQLI_ASSOC);
                 $_SESSION['nr_habitaciones'] = $habitaciones;
                 if (empty($habitaciones)) {
@@ -116,8 +146,8 @@ switch ($accion) {
 
     case 'confirmar_reserva_final':
         if (!isset($_SESSION['nr_cliente_info']) || !isset($_POST['habitacion_id_seleccionada']) || !isset($_SESSION['nr_filtros'])) {
-             $_SESSION['mensaje_reserva'] = ['tipo' => 'danger', 'texto' => "Faltan datos. Por favor, reinicie el proceso."];
-             $response = ['status' => 'error', 'action' => 'reload_form'];
+            $_SESSION['mensaje_reserva'] = ['tipo' => 'danger', 'texto' => "Faltan datos. Por favor, reinicie el proceso."];
+            $response = ['status' => 'error', 'action' => 'reload_form'];
         } else {
             // Lógica de confirmación de reserva (copiada de tu original)
             $cliente_dni = $_SESSION['nr_cliente_info']['dni'];
@@ -127,11 +157,12 @@ switch ($accion) {
 
             // Obtener precio y calcular monto
             $stmt_hab = $conexion->prepare("SELECT precio FROM habitaciones WHERE id = ?");
-            $stmt_hab->bind_param("i", $habitacion_id); $stmt_hab->execute();
+            $stmt_hab->bind_param("i", $habitacion_id);
+            $stmt_hab->execute();
             $precio_noche = $stmt_hab->get_result()->fetch_assoc()['precio'];
             $monto_total = $precio_noche * $estancia;
             $stmt_hab->close();
-            
+
             // Doble verificación de disponibilidad
             $fecha_e = $filtros['fecha_entrada'] . " 14:00:00";
             $fecha_s = $filtros['fecha_salida'] . " 12:00:00";
@@ -141,7 +172,7 @@ switch ($accion) {
             $conflict_count = $stmt_check->get_result()->fetch_assoc()['count'];
             $stmt_check->close();
 
-            if($conflict_count > 0){
+            if ($conflict_count > 0) {
                 $_SESSION['mensaje_reserva'] = ['tipo' => 'danger', 'texto' => "Conflicto de reserva. La habitación ya no está disponible."];
                 unset($_SESSION['nr_habitaciones']);
                 $response = ['status' => 'error', 'action' => 'reload_form'];
@@ -172,4 +203,3 @@ $conexion->close();
 header('Content-Type: application/json');
 echo json_encode($response);
 exit();
-?>

@@ -80,9 +80,6 @@ $conexion->close();
     <div class="row g-4">
         <div class="col-lg-8">
             <div class="card shadow-sm">
-                <div class="card-header py-3">
-                    <h5 class="card-title mb-0"><i class="fas fa-list-ul me-2"></i>Usuarios del Sistema</h5>
-                </div>
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
                         <thead class="bg-light">

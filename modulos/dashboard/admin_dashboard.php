@@ -429,6 +429,122 @@ if ($_SESSION['cargo'] !== 'Administrador') {
       font-weight: 600;
       font-size: 0.75rem;
     }
+
+    #wrapper {
+      max-width: 90%;
+      margin: 0 auto;
+    }
+
+    /* Añadir al CSS del admin_dashboard.php */
+
+    /* 1. Contenedor principal para centrar contenido */
+    #contentArea {
+      max-width: 95%;
+      margin: 0 auto;
+    }
+
+    /* 2. Mejorar las tarjetas de KPIs (similar a recepción pero adaptado) */
+    .card.shadow-sm {
+      border-radius: var(--radius-grande);
+      border: 1px solid var(--color-borde);
+      transition: var(--transicion-suave);
+      box-shadow: var(--sombra-sutil);
+      padding: 1.5rem;
+    }
+
+    .card.shadow-sm:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--sombra-media);
+      border-color: var(--color-sidebar-link-active-bg);
+    }
+
+    /* 3. Mejorar los iconos de las tarjetas */
+    .card-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 1rem;
+      font-size: 1.5rem;
+      transition: var(--transicion-suave);
+    }
+
+    .card:hover .card-icon {
+      transform: scale(1.05);
+    }
+
+    /* 4. Mejorar el gráfico */
+    .card-body canvas {
+      width: 100% !important;
+      height: 300px !important;
+    }
+
+    /* 5. Mejorar la tabla de últimas reservas */
+    .table-responsive {
+      border-radius: var(--radius-grande);
+      overflow: hidden;
+    }
+
+    .table td {
+      padding: 1rem;
+    }
+
+    /* 6. Añadir animación de carga consistente */
+    .loading-overlay {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 300px;
+    }
+
+    .loader {
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid var(--color-sidebar-link-active-bg);
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* 7. Mejorar los headers de las cards */
+    .card-header.bg-light {
+      background-color: var(--color-content-bg) !important;
+      border-bottom: 1px solid var(--color-borde);
+      padding: 1.25rem 1.5rem;
+    }
+
+    .card-header h5 {
+      font-family: var(--fuente-textos);
+      font-weight: 600;
+      margin: 0;
+      display: flex;
+      align-items: center;
+    }
+
+    /* 8. Ajustar márgenes y paddings */
+    .main-wrapper {
+      padding: 2rem;
+    }
+
+    .section-title {
+      margin-bottom: 1.5rem;
+    }
+
+    .row.g-4 {
+      margin-bottom: 2rem;
+    }
   </style>
 </head>
 
@@ -527,12 +643,15 @@ if ($_SESSION['cargo'] !== 'Administrador') {
         <!-- 2. Tarjetas de KPIs -->
         <div class="row g-4 mb-5">
           <div class="col-lg-3 col-md-6">
-            <div class="card shadow-sm">
+            <div class="card shadow-sm h-100">
               <div class="card-body d-flex align-items-center">
-                <div class="card-icon icon-reserva me-3"><i class="fas fa-dollar-sign"></i></div>
+                <div class="card-icon icon-reserva">
+                  <i class="fas fa-dollar-sign"></i>
+                </div>
                 <div>
                   <h6 class="card-subtitle text-muted mb-1">Ingresos de Hoy</h6>
                   <h4 class="card-title mb-0 fw-bold">S/ <?php echo number_format($ingresos_hoy, 2); ?></h4>
+                  <small class="text-success"><i class="fas fa-arrow-up"></i> 12% vs ayer</small>
                 </div>
               </div>
             </div>
@@ -576,11 +695,11 @@ if ($_SESSION['cargo'] !== 'Administrador') {
         <div class="row g-4">
           <!-- Columna Izquierda: Gráfico de Ingresos -->
           <div class="col-lg-7">
-            <div class="card shadow-sm">
+            <div class="card shadow-sm h-100">
               <div class="card-header bg-light">
                 <h5 class="card-title mb-0"><i class="fas fa-chart-area me-2"></i>Ingresos de la Última Semana</h5>
               </div>
-              <div class="card-body">
+              <div class="card-body position-relative" style="min-height: 300px;">
                 <canvas id="graficoIngresos"></canvas>
               </div>
             </div>
@@ -595,42 +714,39 @@ if ($_SESSION['cargo'] !== 'Administrador') {
               <div class="table-responsive">
                 <table class="table table-hover mb-0">
                   <tbody>
-                    <?php if (empty($ultimas_reservas)): ?>
+                    <?php foreach ($ultimas_reservas as $reserva): ?>
+                      <tr class="transition-smooth">
+                        <!-- contenido -->
                       <tr>
-                        <td class="text-center p-4 text-muted">No hay reservas recientes.</td>
-                      </tr>
-                    <?php else: ?>
-                      <?php foreach ($ultimas_reservas as $reserva): ?>
-                        <tr>
-                          <td class="p-3">
-                            <div class="d-flex justify-content-between align-items-center">
-                              <div>
-                                <div class="fw-bold"><?php echo htmlspecialchars($reserva['nombres'] . ' ' . $reserva['apellidos']); ?></div>
-                                <small class="text-muted">Hab. <?php echo htmlspecialchars($reserva['nombre_habitacion']); ?> - Entrada: <?php echo date('d/m/y', strtotime($reserva['fecha_entrada'])); ?></small>
-                              </div>
-                              <div class="text-end">
-                                <div class="fw-bold text-success">S/ <?php echo number_format($reserva['monto_total'], 2); ?></div>
-                                <span class="badge rounded-pill text-bg-<?php
-                                                                        switch ($reserva['estado']) {
-                                                                          case 'Completa':
-                                                                            echo 'success';
-                                                                            break;
-                                                                          case 'Confirmada':
-                                                                            echo 'primary';
-                                                                            break;
-                                                                          case 'Cancelada':
-                                                                            echo 'danger';
-                                                                            break;
-                                                                          default:
-                                                                            echo 'secondary';
-                                                                        }
-                                                                        ?>"><?php echo htmlspecialchars($reserva['estado']); ?></span>
-                              </div>
+                        <td class="p-3">
+                          <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                              <div class="fw-bold"><?php echo htmlspecialchars($reserva['nombres'] . ' ' . $reserva['apellidos']); ?></div>
+                              <small class="text-muted">Hab. <?php echo htmlspecialchars($reserva['nombre_habitacion']); ?> - Entrada: <?php echo date('d/m/y', strtotime($reserva['fecha_entrada'])); ?></small>
                             </div>
-                          </td>
-                        </tr>
-                      <?php endforeach; ?>
-                    <?php endif; ?>
+                            <div class="text-end">
+                              <div class="fw-bold text-success">S/ <?php echo number_format($reserva['monto_total'], 2); ?></div>
+                              <span class="badge rounded-pill text-bg-<?php
+                                                                      switch ($reserva['estado']) {
+                                                                        case 'Completa':
+                                                                          echo 'success';
+                                                                          break;
+                                                                        case 'Confirmada':
+                                                                          echo 'primary';
+                                                                          break;
+                                                                        case 'Cancelada':
+                                                                          echo 'danger';
+                                                                          break;
+                                                                        default:
+                                                                          echo 'secondary';
+                                                                      }
+                                                                      ?>"><?php echo htmlspecialchars($reserva['estado']); ?></span>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                      </tr>
+                    <?php endforeach; ?>
                   </tbody>
                 </table>
               </div>
