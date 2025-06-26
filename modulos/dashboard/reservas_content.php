@@ -1,14 +1,7 @@
 <?php
-// modulos/reservas/reservas_content.php
-
-// No se necesita lógica PHP aquí, es solo una vista de menú.
 ?>
-<!-- ========================================================================== -->
-<!-- ============== ¡ESTE ES EL DISEÑO PROFESIONAL DEL MÓDULO! ============== -->
-<!-- ========================================================================== -->
 <section id="gestion-reservas">
 
-  <!-- CAMBIO: Se usan las nuevas clases de título profesional -->
   <h2 class="section-title">
     <i class="fas fa-calendar-check"></i>
     Gestión de Reservas

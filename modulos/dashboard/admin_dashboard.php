@@ -434,7 +434,6 @@ if ($_SESSION['cargo'] !== 'Administrador') {
       }
       
       $conexion->close();
-      // ----- FIN DE LA LÓGICA DE DATOS -----
       ?>
 
       <main id="contentArea">
@@ -511,7 +510,6 @@ if ($_SESSION['cargo'] !== 'Administrador') {
               </div>
             </div>
 
-            <!-- Columna Derecha: Tabla de Actividad Reciente (Rediseñada) -->
             <div class="col-lg-5">
               <div class="card">
                 <div class="card-header">
@@ -584,12 +582,9 @@ if ($_SESSION['cargo'] !== 'Administrador') {
           if (!response.ok) throw new Error(`Error ${response.status}: No se pudo cargar ${pathModulo}`);
           const html = await response.text();
           
-          // Usamos un delay mínimo para que la transición sea perceptible
           setTimeout(() => {
             contentArea.innerHTML = html;
             contentArea.style.opacity = '1';
-
-            // Re-ejecutar scripts del contenido cargado
             Array.from(contentArea.querySelectorAll("script")).forEach(oldScript => {
               const newScript = document.createElement("script");
               Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
